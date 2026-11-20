@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 from sklearn.mixture import GaussianMixture
-from calculate_density import process_single_video, collect_raw_areas_from_video, brightness_variation
+from traffic_detector import process_single_video, collect_raw_areas_from_video, brightness_variation
 from sklearn.metrics import f1_score
 
 CSV_PATH = r"G:\Hwy 51 at Arden\vehicle_density.csv"       #Enter correct path here
