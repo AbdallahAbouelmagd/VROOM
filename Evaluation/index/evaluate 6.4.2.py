@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from sklearn.metrics import f1_score
 
-csv_files = [f for f in os.listdir(".") if f.endswith(".csv")]
+csv_files = [f for f in os.listdir("") if f.endswith(".csv")]
 
 TRAFFIC_CLASSES = ["low", "normal", "peak"]
 

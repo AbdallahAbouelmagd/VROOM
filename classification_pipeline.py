@@ -3,10 +3,9 @@ import pandas as pd
 import numpy as np
 from sklearn.mixture import GaussianMixture
 from traffic_detector import process_single_video, collect_raw_areas_from_video, brightness_variation
-from sklearn.metrics import f1_score
 
-CSV_PATH = r"G:\Hwy 51 at Arden\vehicle_density.csv"       #Enter correct path here
-BASE_PATH = r"G:\Hwy 51 at Arden"                          #Enter correct path here
+CSV_PATH = r"G:\Hwy 51 at Arden\vehicle_density.csv" #Enter correct path here
+BASE_PATH = r"G:\Hwy 51 at Arden" #Enter correct path here
 
 RUN_ON_ALL_DATA = False
 
@@ -41,10 +40,6 @@ for p in all_paths:
     elif name in test_video_set:
         test_paths.append(p)
 
-
-
-
-
 for p in train_paths:
     feat = brightness_variation(p)
     if feat is None:
@@ -62,12 +57,7 @@ clusters = gmm.predict(X)
 cluster_means = [X[clusters == i].mean() for i in range(2)]
 high_var_cluster = np.argmax(cluster_means)
 
-
-
-
-
 for p in train_paths:
-
     video_name = os.path.basename(p)
     if video_name not in video_to_row.index:
         continue
@@ -94,7 +84,6 @@ print(len(all_train_areas_night), "NIGHT areas found in training set")
 all_train_areas_day = np.array(all_train_areas_day)
 
 if len(all_train_areas_day) >= 20:
-
     areas_day_log = np.log(all_train_areas_day + 1).reshape(-1, 1)
 
     gmm_day = GaussianMixture(
@@ -124,10 +113,10 @@ else:
     min_area_day = 50
     max_area_day = 5000
 
-print ("min_area_day:", min_area_day)
+print("min_area_day:", min_area_day)
 print("max_area_day:", max_area_day)
-if len(all_train_areas_night) >= 20:
 
+if len(all_train_areas_night) >= 20:
     areas_night_log = np.log(all_train_areas_night + 1).reshape(-1, 1)
 
     gmm_night = GaussianMixture(
@@ -156,12 +145,13 @@ else:
     print("Insufficient NIGHT samples for GMM")
     min_area_night = 10
     max_area_night = 1000
+
 print("min_area_night:", min_area_night)
 print("max_area_night:", max_area_night)
+
 train_densities = []
 
 for p in train_paths:
-
     video_name = os.path.basename(p)
     if video_name not in video_to_row.index:
         continue
@@ -202,28 +192,14 @@ max_density = (
 
 print("Max found density in training:", max_density)
 
-train_gt_values = train_df["Avg_Vehicles_Per_Frame"].values
-gt_p90 = np.percentile(train_gt_values, 90) if len(train_gt_values) > 0 else 1
-
-
 df["pred_density"] = np.nan
 df["pred_norm_density"] = np.nan
-
 df["pred_label"] = pd.NA
-df["gt_label"] = pd.NA
 df["pred_illum"] = pd.NA
-
-df["gt_norm_density"] = np.nan
-df["label_match"] = pd.NA
-
-df["accuracy"] = np.nan
-df["macro_f1"] = np.nan
-df["weighted_f1"] = np.nan
 
 inference_paths = all_paths if RUN_ON_ALL_DATA else test_paths
 
 for p in inference_paths:
-
     video_name = os.path.basename(p)
 
     if video_name not in video_to_row.index:
@@ -265,56 +241,11 @@ for p in inference_paths:
     else:
         pred_label = "normal"
 
-    gt_raw = row["Avg_Vehicles_Per_Frame"]
-    gt_norm = gt_raw / gt_p90 if gt_p90 != 0 else 0
-
-    if gt_norm <= 0.33:
-        gt_label = "low"
-    elif gt_norm >= 0.66:
-        gt_label = "high"
-    else:
-        gt_label = "normal"
-
     df.loc[df["Video"] == video_name, "pred_density"] = density
     df.loc[df["Video"] == video_name, "pred_norm_density"] = norm_density
     df.loc[df["Video"] == video_name, "pred_label"] = pred_label
-
-    df.loc[df["Video"] == video_name, "gt_norm_density"] = gt_norm
-    df.loc[df["Video"] == video_name, "gt_label"] = gt_label
-
-    df.loc[df["Video"] == video_name, "label_match"] = (pred_label == gt_label)
-
-
-if RUN_ON_ALL_DATA:
-    eval_df = df.dropna(subset=["gt_label", "pred_label"])
-    accuracy = eval_df["label_match"].mean()
-    print("Accuracy:", accuracy)
-else:
-    eval_df = df.loc[test_df.index].dropna(subset=["gt_label", "pred_label"])
-    accuracy = eval_df["label_match"].mean()
-    print("Test accuracy:", accuracy)
-
-macro_f1 = f1_score(
-    eval_df["gt_label"],
-    eval_df["pred_label"],
-    average="macro"
-)
-
-weighted_f1 = f1_score(
-    eval_df["gt_label"],
-    eval_df["pred_label"],
-    average="weighted"
-)
-
-df["accuracy"] = accuracy
-df["macro_f1"] = macro_f1
-df["weighted_f1"] = weighted_f1
 
 output_path = CSV_PATH.replace(".csv", "_with_predictions.csv")
 df.to_csv(output_path, index=False)
 
 print("Saved:", output_path)
-
-
-print("Macro F1:", macro_f1)
-print("Weighted F1:", weighted_f1)

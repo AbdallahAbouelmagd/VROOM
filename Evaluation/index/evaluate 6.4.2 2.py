@@ -6,7 +6,7 @@ from sklearn.metrics import f1_score
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.interpolate import make_interp_spline
 
-csv_files = [f for f in os.listdir(".") if f.endswith(".csv")]
+csv_files = [f for f in os.listdir("") if f.endswith(".csv")]
 
 x_samples = []
 y_f1 = []

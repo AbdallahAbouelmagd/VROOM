@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
 import matplotlib.pyplot as plt
 
-csv_files = [f for f in os.listdir(".") if f.endswith(".csv")]
+csv_files = [f for f in os.listdir("") if f.endswith(".csv")]
 
 ILLUM_CLASSES = ["low", "high"]
 
