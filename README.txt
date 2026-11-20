@@ -1,65 +1,47 @@
-1. Dataset
+Overview of this document:
 
-The system was evaluated using a subset of the SLiCE dataset, which is publicly available at the following link:
+1-System’s Goal
+2-Methods & Pipeline
+3-Performance
+4-Use instructions
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-https://www.nes.uni-due.de/wp-content/data/slice/
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-2. Data Preprocessing
+1- System’s Goal
 
-After downloading the dataset, selected camera videos can be preprocessed by converting them to 1 frame per second (1 FPS). This step can be performed using ffmpeg.
+The system was designed to detect change in traffic volume on sections of the highway, using video surveillance cameras installed on highways.
 
-FFmpeg Installation
+The system is able to consistently detect the traffic volume by comparing the current traffic state to the previous traffic patterns of this scene, which keeps it reliable across various cameras, angles, and environments.
 
-To install FFmpeg, follow the official installation guide for your operating system:
-https://ffmpeg.org/download.html
+The main challenge in visual traffic surveillance is the resource constrained environment, which is why the system was developed to be extremely lightweight and can be installed on low cost embedded chips or a system-on-chip (SoC).
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+2- Methods & Pipeline
 
-After installing FFmpeg, navigate to the selected camera directory in a terminal and execute the convert_to_1_fps.ps1 script. The script recursively processes all video files within the directory and converts them to 1 frame per second.
-
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-3. Evaluation
-
-The evaluate.py script is used to produce the experimental results presented in Chapter 6. It computes the following metrics:
-
-Accuracy
-Macro F1-score
-Weighted F1-score
+When the system is installed on a new surveillance camera, the system first analyses the feed to extract scene specific information such as the shape and sizes of present vehicles, lighting conditions, as well as the traffic patterns in that scene.
 
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-4. Ground Truth Generation
-
-(The CSV files containing the ground truth for the dataset used in the evaluation are provided in the CSV_GT folder)
-
--To evaluate the system, ground truth annotations are required for computing evaluation metrics, including accuracy, macro F1-score, and weighted F1-score.
+All of which are used in the following stage in order to reliably detect current traffic and compare it to the norms of this road section.
 
 
-The script count_vehicles.py is used for this purpose.
+After the calibration process, the system continues to process the incoming feed, extract the foreground, and filter noise such as shadows and headlights, using thresholds defined during the automatic calibration phase, based on the lighting conditions in the scene, due to background subtraction’s high sensitivity to illumination changes.
 
-Steps:
-Open the script and set the path to the selected camera directory.
-Run the script:
-python count_vehicles.py
-The script will generate a CSV file inside the corresponding camera folder.
+The vehicles in the scene are then detected, and the number of detected vehicles is then accumulated over predefined intervals in order to label the current traffic volume as either in a state of low, normal, or high traffic relative to the norms of this road.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-The generated CSV file contains the following columns:
+3-Performance
 
-Video
-Avg_Vehicles_Per_Frame
+The system's pipeline was tested using an extensive dataset from highway surveillance cameras in California, Los Angeles, and San Francisco. The dataset covers diversity in camera angles, feed quality, road shape, lighting conditions, and weather. 
 
-The evaluation also requires a training–testing data split. This is performed by opening the generated CSV file, adding a data_type column, selecting a single day from the subfolder column that fulfills the requirements described in the thesis, and assigning all rows corresponding to that day to the training set, while assigning the remaining rows to the testing set.
+The system’s results were compared to the results of a pre-trained YOLO model, which is one of the most popular deep learning models used in traffic surveillance, which is requires extensively more computation resources. 
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The system achieved an F1 score of 0.8, showing consistency in detecting change in traffic states, especially in the extreme regions across diverse traffic environments, while requiring much less resources.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-5. System Setup and Execution
+4-Use Instructions
 
 Python 3.13.4 was used to execute the system.
 
-To configure the evaluation, open the evaluate.py script and specify the correct paths for the camera directory and the CSV file.
+To configure the pipeline, open the classification_pipeline.py script and specify the correct paths for the camera directory and the CSV file containing the metadata.
 
 Install dependencies:
 
@@ -67,15 +49,5 @@ pip install -r requirements.txt
 
 Run the system:
 
-python evaluate.py
-
-This generates a new CSV file containing the predictions for each video, as well as the evaluation metrics for the corresponding camera.
-
-(The CSV files produced during the evaluation are provided in the CSV_predictions folder)
-
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-The index folder contains scripts and the CSV files used to generate additional metrics and graphs presented in the evaluation chapter, based on the predictions produced by the evaluate.py script.
-
-
+python classification_pipeline
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
